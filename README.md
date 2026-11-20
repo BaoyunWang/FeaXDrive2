@@ -1,1 +1,236 @@
 # FeaXDrive2
+
+**Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving**
+
+FeaXDrive2 combines an Alpamayo-conditioned Action Flow-DiT with body-anchored
+spatial visual retrieval, rollout-consistent safety fine-tuning (RC-F), and
+VLM–Action Alignment. During five Flow updates, each preceding clean-trajectory
+estimate determines the next body queries and side-probe locations.
+
+This repository contains the paper model, its training objectives, feature
+readout, checkpoint conversion, and portable training/inference examples.
+Model weights, licensed datasets, maps, metric caches, and experiment outputs
+are not included. There are no automatic asset downloads or cluster submissions.
+
+## Contents
+
+| Component | Implementation |
+| --- | --- |
+| 16-block Action Flow-DiT and five-step Euler generation | `feaxdrive2/model/flow.py`, `feaxdrive_dit.py` |
+| Multimodal condition adapter | `feaxdrive2/model/conditioning.py`, `multimodal_flow.py` |
+| Body queries, side probes, projection, local/scene attention and gated injection | `feaxdrive2/model/camera_grounded_query.py` |
+| RC-F high-risk supervision and reference behavior preservation | `feaxdrive2/training/rcf.py` |
+| Joint language LoRA and action-generator optimization | `feaxdrive2/training/alignment.py`, `alignment_parameters.py` |
+| Native VLM feature extraction, fixed-token training replay, adapted generation | `feaxdrive2/vlm/` |
+| Local visual-output intervention | `feaxdrive2/model/local_visual_output_intervention.py` |
+
+Shared computational kernels retain their research checkpoint tensor names.
+Internal identifiers in these kernels are not names of additional paper models.
+The public API uses `base`, `rcf_no_spatial`, and `body_scene` for the Base Planner,
+RC-F w/o Spatial Retrieval, and Body–Scene Grounded Planner. Full **FeaXDrive2**
+loads the `body_scene` checkpoint **and both parts of joint alignment**: language
+LoRA and selected Action Flow-DiT tensors. RL and learned candidate scoring are
+not part of this release.
+
+## Installation
+
+Use Python 3.12 for the complete VLM path. The planner can also be used alone
+with precomputed features. Install the appropriate PyTorch 2.8.0 / torchvision
+0.23.0 build for your CUDA environment, then run:
+
+```bash
+python -m pip install -e ".[test]"
+python -m pytest -q
+```
+
+For VLM extraction and alignment, additionally install `.[alignment]` and the
+[official Alpamayo 1.5 implementation](https://github.com/NVlabs/alpamayo), with
+its dependencies and licensed [model assets](https://huggingface.co/nvidia/Alpamayo-1.5-10B).
+This integration uses the `alpamayo1_5` package, PyTorch 2.8.0 and Transformers
+4.57.1. `model_path`, `vlm_path`, and `processor_path` must refer to local assets.
+The source readout uses native Qwen3-VL interfaces; a different Alpamayo release
+is not an interchangeable dependency.
+
+## Checkpoints
+
+Public tensor files use a small explicit schema and strict loading. Weight
+shapes alone cannot identify a spatial layout, so each planner checkpoint also
+records its variant. Loading a mismatched variant is rejected.
+
+Existing Lightning research checkpoints can be converted explicitly:
+
+```bash
+python examples/convert_checkpoint.py --kind planner --variant body_scene \
+  --prefix agent.action_head. --input /path/to/grounded.ckpt \
+  --output checkpoints/body_scene.pt
+python examples/convert_checkpoint.py --kind alignment \
+  --input /path/to/joint_alignment.pt --output checkpoints/alignment.pt
+```
+
+The prefix must match the actual source state dictionary; no prefix is guessed.
+Conversion checks spatial-layout metadata and all planner tensor keys/shapes.
+Optimizer state and private experiment paths are omitted. Inputs are loaded with
+`weights_only=True`; legacy pickled objects need a trusted upstream tensor export.
+
+## Single-candidate inference
+
+The model accepts current camera feature maps and multimodal conditioning.
+The exact tensor contract and preprocessing requirements are in
+[docs/data.md](docs/data.md).
+
+```python
+import torch
+from feaxdrive2 import build_planner, token_noise
+from feaxdrive2.checkpoints import load_planner
+
+planner = load_planner(build_planner("body_scene", device="cuda"),
+                       "checkpoints/body_scene.pt").eval()
+# features: the tensor mapping specified in docs/data.md, already on CUDA.
+with torch.no_grad():
+    noise = token_noise(tokens, seed=0, device="cuda")
+    trajectories = planner(features, noise)["pred_traj"]  # [B,8,3]
+```
+
+The output is `(x, y, heading)` at 0.5, 1.0, ..., 4.0 seconds, expressed in the
+current ego rear-axle frame, in metres/radians. The inference seed is mapped per
+scenario token; changing batch order does not change a scenario's initial noise.
+CPU and CUDA random-number streams need not produce identical samples.
+
+For a JSONL manifest of portable feature records:
+
+```bash
+python examples/infer.py --manifest /path/to/navtest.jsonl \
+  --variant body_scene --checkpoint checkpoints/body_scene.pt \
+  --device cuda --output outputs/body_scene_predictions.npz
+```
+
+For the complete FeaXDrive2, use `--alignment checkpoints/alignment.pt` **and
+features generated by that same adapted VLM**. Original frozen-VLM features
+cannot reproduce joint-alignment inference.
+
+```python
+from feaxdrive2.checkpoints import load_alignment, apply_alignment
+from feaxdrive2.vlm.runtime import native_readout
+
+alignment = load_alignment("checkpoints/alignment.pt")
+apply_alignment(planner, alignment)
+readout = native_readout(model_path=model_path, vlm_path=vlm_path,
+    processor_path=processor_path, alignment=alignment, device="cuda")
+context = readout.extract_multimodal_context(sample, hidden_source="generation_capture")
+```
+
+`context` must be packed into the planner feature contract, together with motion
+history and calibrated camera features. See [docs/data.md](docs/data.md).
+The training-time fixed-token replay API is not the final autoregressive
+inference path.
+
+## Training
+
+The training order is base planner learning, offline sample construction,
+RC-F, and joint VLM–Action Alignment. Dataset splitting, geometry-based scene
+selection and official scoring remain dataset-side operations; no NAVTEST scene
+may be used for training or checkpoint selection.
+
+### Base planner and RC-F
+
+The portable single-device loop supports actual scene records and gradient
+accumulation, including the four-role RC-F sampler:
+
+```bash
+python examples/train_cached.py --objective base --manifest /path/to/train.jsonl \
+  --epochs 100 --batch-size 128 --output outputs/base
+python examples/train_cached.py --objective rcf --manifest /path/to/rcf_train.jsonl \
+  --base-checkpoint checkpoints/base.pt --updates 4000 --batch-size 32 \
+  --output outputs/rcf
+```
+
+The example loop is an integration entry point, not the distributed cluster
+runner used for the paper. It accumulates individual scenes rather than relying
+on a fixed padded token length. Base learning uses BF16 on CUDA; RC-F uses FP32.
+Checkpoints are saved without overwriting existing outputs. Official validation
+and checkpoint selection are external to this loop.
+
+RC-F retains the original four training roles and sampling probabilities:
+
+| Role | Pool size | Sampling probability | Objective |
+| --- | ---: | ---: | --- |
+| Collision | 369 | 25% | High-risk trajectory supervision |
+| NearCollision | 1,753 | 15% | High-risk trajectory supervision |
+| HardSafe | 8,673 | 25% | Reference behavior preservation |
+| Normal | 71,883 | 35% | Reference behavior preservation |
+
+HardSafe and Normal share the preservation objective; their admission criteria
+and sampling frequency differ. High-risk targets are safety-validated
+demonstrations. Preservation interpolation targets are saved Base Planner
+trajectories, while the free reference rollout uses the current shared noise.
+See [docs/data.md](docs/data.md) for this distinction.
+
+Role pools are shuffled and cycled independently. Each five-update cycle uses
+quotas `(8,5,8,11)` for four updates and `(8,4,8,12)` for one, with global batch
+32. This is coverage-deck sampling, not independent draws with replacement.
+
+RC-F freezes the condition adapter and most of the planner. It trains the
+spatial branch and self-attention in zero-based blocks 12 and 14, plus FFN/AdaLN
+in blocks 12–15. Cross-attention stays frozen. Peak learning rates are `1e-4`
+and `1e-5`, respectively; 4,000 updates use 200 warm-up updates and cosine decay
+to one tenth. The optimizer is AdamW with `(0.9,0.95)`, weight decay `1e-4`, and
+gradient clipping at 1.0.
+
+### Joint VLM–Action Alignment
+
+```python
+from feaxdrive2.training.api import build_alignment, alignment_optimizer
+from feaxdrive2.checkpoints import save_alignment
+
+model = build_alignment(planner, model_path=model_path, vlm_path=vlm_path)
+optimizer = alignment_optimizer(model)
+# features includes the native language boundary, original reference features,
+# camera tensors and shared flow_noise/flow_time. See docs/data.md.
+optimizer.zero_grad(set_to_none=True)
+result = model(features, {"trajectory": targets}, roles, weights)
+result["loss"].backward()
+torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0, error_if_nonfinite=True)
+optimizer.step()
+save_alignment(model, "outputs/alignment.pt")
+```
+
+Alignment trains q/v LoRA in language layers 28–35 (rank 16, alpha 32, dropout
+0) and the same 44 selected Action Flow-DiT tensors. Spatial retrieval, vision,
+condition adaptation, and other weights remain frozen. The learning rates are
+`3e-6` and `2e-6`; the effective batch is 16, with 5% warm-up and cosine decay to
+one tenth over 2,200 updates. All preservation losses are multiplied by 0.2;
+high-risk supervision is unchanged. The reference is an independent frozen
+Body–Scene Grounded Planner. Fixed original reasoning tokens are replayed with
+native prefill/decode during training; adapted autoregressive generation is used
+at inference.
+
+Alignment uses an independently admitted, Grounded-Planner-relative pool:
+1,325 high-risk, 8,724 HardSafe and 72,383 Normal scenes. Its global-batch-16
+quotas cycle through `(2,4,10)`, `(1,4,11)`, `(2,4,10)`, `(1,4,11)`, `(2,4,10)`.
+Do not substitute the Base-relative four-role RC-F pool for alignment.
+
+Only model/loss integration is provided for alignment, not a replacement for
+the dataset-specific language-boundary cache builder or distributed trainer.
+
+## Evaluation and release status
+
+Use official [NAVSIM](https://github.com/autonomousvision/navsim) evaluation
+with its licensed data/maps and the matching v1 or v2 scorer. This repository
+does not replace simulation scoring with a proxy. The inference example writes
+token-aligned NPZ predictions; each row can be wrapped as NAVSIM's `Trajectory`
+with a 4-second horizon and a 0.5-second interval in an installed NAVSIM checkout.
+The paper's v2 result is NAVTEST evaluated using the v2 scorer, not a synthetic
+two-stage evaluation.
+
+This is a source-code preparation release. Its CPU checks exercise the model
+interfaces, five-step traces, gradients, parameter freezing, and strict tensor
+loading. A fresh full-data GPU reproduction with the released packaging has not
+been run. No checkpoint or dataset download is advertised before those assets
+are actually published.
+
+## License and acknowledgements
+
+See [LICENSE](LICENSE) and [NOTICE](NOTICE). The source builds on FeaXDrive,
+NAVSIM, ReCogDrive/LightningDiT, and NVIDIA Alpamayo. Existing copyright headers
+are retained. Alpamayo code/model licensing and dataset access terms apply
+separately; their weights and datasets are not redistributed here.

@@ -1,0 +1,16 @@
+FeaXDrive2 model source release
+
+This code is derived from the FeaXDrive/NAVSIM research implementation and retains
+its Apache-2.0 license. Shared Action Flow-DiT components derive from ReCogDrive
+and NAVSIM; original module names in state dictionaries are preserved.
+ReCogDrive: Copyright 2025 Xiaomi Corporation, Apache-2.0.
+LightningDiT: Copyright (c) 2024 HUST Vision Lab, MIT License.
+Copies of the upstream notices/licenses are included in licenses/.
+
+Changes for this source release include Flow-only extraction, local import
+reorganization, portable model/checkpoint interfaces, and training examples.
+The spatial grounding and safety objectives are FeaXDrive2 additions.
+
+Alpamayo 1.5 is an external dependency from NVIDIA. Its implementation and model
+weights retain their separate upstream licenses. They are not redistributed here.
+NAVSIM, nuPlan, datasets, maps and checkpoints are not bundled or relicensed.

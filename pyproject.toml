@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=78", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "feaxdrive2"
+version = "0.1.0"
+description = "Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "licenses/*.txt"]
+dependencies = [
+  "torch==2.8.0", "torchvision==0.23.0", "numpy==1.26.4",
+  "diffusers==0.35.1", "transformers==4.57.1", "timm==1.0.20",
+]
+
+[project.optional-dependencies]
+alignment = ["peft==0.17.1"]
+test = ["pytest==8.4.2"]
+
+[project.urls]
+Repository = "https://github.com/BaoyunWang/FeaXDrive2"
+
+[tool.setuptools.packages.find]
+include = ["feaxdrive2*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
