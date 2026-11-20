@@ -1,4 +1,4 @@
-# FeaXDrive2: Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving
+<h1 align="center">FeaXDrive2: Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving</h1>
 
 <div align="center">
 
