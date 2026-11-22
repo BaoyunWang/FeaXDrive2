@@ -38,8 +38,8 @@ def test_sampler_trace_and_condition_gradient():
     assert all(p.grad is None for p in model.parameters())
 
 
-@pytest.mark.parametrize("variant", ["body_scene", "rcf_no_spatial"])
-def test_rcf_real_backward_and_parameter_ownership(variant):
+@pytest.mark.parametrize("variant", ["body_scene", "rcf_no_spatial", "fixed_query"])
+def test_rcf_real_backward_and_parameter_ownership(variant, monkeypatch):
     base = build_planner("base").eval().requires_grad_(False)
     model = build_planner(variant)
     initialize_from_base(model, base)
@@ -48,6 +48,15 @@ def test_rcf_real_backward_and_parameter_ownership(variant):
     assert sum(p.numel() for p in dit_parameters(model.action_head).values()) == 6505152
     data = features(batch=3)
     data.update(flow_noise=token_noise(["risk", "hard", "normal"]), flow_time=torch.tensor([.2, .4, .8]))
+    calls = []
+    predict = model.action_head.predict_flow_velocity
+
+    def capture(*args, **kwargs):
+        if "previous_metric" in kwargs:
+            calls.append(kwargs["previous_metric"].detach().clone())
+        return predict(*args, **kwargs)
+
+    monkeypatch.setattr(model.action_head, "predict_flow_velocity", capture)
     target = torch.zeros(3, 8, 3)
     target[..., 0] = torch.arange(1, 9)
     result = model.rcf_loss(data, target, torch.tensor([0, 1, 2]), base)
@@ -58,6 +67,13 @@ def test_rcf_real_backward_and_parameter_ownership(variant):
     assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in model.parameters() if p.requires_grad)
     assert all(p.grad is None for p in model.parameters() if not p.requires_grad)
     assert all(p.grad is None for p in base.parameters())
+    if variant == "fixed_query":
+        # Five actual Flow evaluations, then the local auxiliary evaluation.
+        assert len(calls) == 6
+        assert torch.equal(calls[0], torch.zeros_like(calls[0]))
+        for query in calls[2:]:
+            # All three local times are after the first clean estimate.
+            assert torch.equal(query, calls[1])
 
 
 def test_base_training_and_normalization():

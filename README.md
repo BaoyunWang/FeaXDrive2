@@ -40,6 +40,7 @@ Base Planner learning
 
 ## News
 
+- **2026-11-22**: The formal Fixed-Query Retrieval ablation is supported in RC-F training, checkpoint conversion, and inference.
 - **2026-11-20**: Paper-model source code, training objectives, feature readout, checkpoint conversion, and portable examples are released.
 
 This repository contains the paper model, its training objectives, feature
@@ -76,8 +77,8 @@ multimodal conditioning, scene manifests, and training records. Dataset, map,
 model, and cache paths refer to assets provided in your local environment.
 
 Public tensor files use a small explicit schema and strict loading. Weight
-shapes alone cannot identify a spatial layout, so each planner checkpoint also
-records its variant. Loading a mismatched variant is rejected.
+shapes alone cannot identify a spatial layout or query-update policy, so each
+planner checkpoint records its variant. Loading a mismatched variant is rejected.
 
 Existing Lightning research checkpoints can be converted explicitly:
 
@@ -90,7 +91,8 @@ python examples/convert_checkpoint.py --kind alignment \
 ```
 
 The prefix must match the actual source state dictionary; no prefix is guessed.
-Conversion checks spatial-layout metadata and all planner tensor keys/shapes.
+Conversion checks spatial-layout and query-update metadata, as well as all
+planner tensor keys/shapes.
 Optimizer state and private experiment paths are omitted. Inputs are loaded with
 `weights_only=True`; legacy pickled objects need a trusted upstream tensor export.
 
@@ -202,6 +204,59 @@ and `1e-5`, respectively; 4,000 updates use 200 warm-up updates and cosine decay
 to one tenth. The optimizer is AdamW with `(0.9,0.95)`, weight decay `1e-4`, and
 gradient clipping at 1.0.
 
+#### Fixed-Query Retrieval training ablation
+
+Use `fixed_query` to train from the **same Base Planner** with body-corner
+anchors, side-probe sampling, and the complete RC-F objective. The first Flow
+evaluation uses zero metric query conditions. Its clean-trajectory estimate is
+clipped, denormalized, and detached; the resulting retrieval locations are held
+fixed for the remaining four evaluations. Flow states, time conditioning,
+attention, and spatial context continue to update. Local auxiliary supervision
+uses the corresponding query condition from this same rollout.
+
+```bash
+python examples/train_cached.py --objective rcf --variant fixed_query \
+  --manifest /path/to/rcf_train.jsonl --base-checkpoint checkpoints/base.pt \
+  --updates 4000 --batch-size 32 --save-every 1000 --seed 0 \
+  --output outputs/fixed_query
+```
+
+This uses the same trainable parameters, four-role sampling, losses, optimizer,
+and learning-rate schedule described above. The formal fixed-query run used
+eight GPUs with four scenes per GPU (global batch 32), and selected the
+1,000-update checkpoint from 1,000/2,000/3,000/4,000 using 4,231 validation
+scenes. The reported dynamic comparator is the existing Body–Scene Grounded
+Planner, selected at 1,000 updates from its historical 2,000-update run; both
+used the 4,000-update learning-rate schedule. The portable loop above uses
+single-device accumulation, not the original distributed launch. It does not
+perform validation scoring or automatically select the final checkpoint.
+
+| NAVTEST configuration | At-fault collisions | Geometric contacts | PDMS |
+| --- | ---: | ---: | ---: |
+| Fixed-Query Retrieval | 131 | 143 | 88.426 |
+| Body–Scene Grounded Planner | 123 | 136 | 88.550 |
+
+These are the completed research runs on 12,146 scenes, not new results from
+this source release. Fixed-query training is distinct from disabling query
+updates only at evaluation on a dynamically trained checkpoint.
+
+Convert the formal research checkpoint, or use the portable loop's selected
+checkpoint directly, and keep `--variant fixed_query` for inference:
+
+```bash
+python examples/convert_checkpoint.py --kind planner --variant fixed_query \
+  --prefix agent.action_head. --input /path/to/fixed_query.ckpt \
+  --output checkpoints/fixed_query.pt
+python examples/infer.py --variant fixed_query --checkpoint checkpoints/fixed_query.pt \
+  --manifest /path/to/navtest.jsonl --seed 0 --output outputs/fixed_query_predictions.npz
+```
+
+Conversion requires `e2.spatial_query_update = "fixed_first_estimate"` and
+`e2.camera_anchor_layout = "body_side_context"`. The public checkpoint retains
+the policy through its `fixed_query` variant; a fixed-query checkpoint cannot
+be loaded as `body_scene` despite having identical tensor shapes. No alignment
+weights are applied for this ablation.
+
 ### 2. Joint VLM–Action Alignment
 
 ```python
@@ -263,7 +318,8 @@ two-stage evaluation.
 Shared computational kernels retain their research checkpoint tensor names.
 Internal identifiers in these kernels are not names of additional paper models.
 The public API uses `base`, `rcf_no_spatial`, and `body_scene` for the Base Planner,
-RC-F w/o Spatial Retrieval, and Body–Scene Grounded Planner. Full **FeaXDrive2**
+RC-F w/o Spatial Retrieval, and Body–Scene Grounded Planner; `fixed_query` selects
+the train-time fixed-query ablation. Full **FeaXDrive2**
 loads the `body_scene` checkpoint **and both parts of joint alignment**: language
 LoRA and selected Action Flow-DiT tensors. RL and learned candidate scoring are
 not part of this release.

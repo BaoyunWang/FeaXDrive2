@@ -36,6 +36,8 @@ def save_planner(planner, path):
     path = Path(path)
     if path.exists():
         raise FileExistsError(path)
+    if planner.action_head.spatial_query_update != planner.spatial_query_update:
+        raise ValueError("Query-update policy does not match the planner variant")
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"format": FORMAT, "variant": planner.variant,
                 "state_dict": {k: v.detach().cpu().clone() for k, v in planner.action_head.state_dict().items()}}, path)
@@ -47,6 +49,7 @@ def load_planner(planner, path):
         raise ValueError("Checkpoint format/variant does not match the requested model")
     validate_state(planner.action_head, payload["state_dict"])
     planner.action_head.load_state_dict(payload["state_dict"], strict=True)
+    planner.action_head.spatial_query_update = planner.spatial_query_update
     return planner
 
 

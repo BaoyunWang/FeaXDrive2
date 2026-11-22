@@ -32,7 +32,7 @@ def main():
     parser.add_argument("--objective", required=True, choices=("base", "rcf"))
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--base-checkpoint")
-    parser.add_argument("--variant", default="body_scene", choices=("body_scene", "rcf_no_spatial", "centerline", "body_corner", "no_geometry_encoding"))
+    parser.add_argument("--variant", default="body_scene", choices=("body_scene", "rcf_no_spatial", "centerline", "body_corner", "no_geometry_encoding", "fixed_query"))
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--updates", type=int, default=4000)
     parser.add_argument("--batch-size", type=int, help="Effective batch through accumulation; default 128 (base), 32 (RC-F)")

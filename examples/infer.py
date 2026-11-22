@@ -12,7 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--checkpoint", required=True)
-    parser.add_argument("--variant", choices=("base", "rcf_no_spatial", "body_scene", "centerline", "body_corner", "no_geometry_encoding"), default="body_scene")
+    parser.add_argument("--variant", choices=("base", "rcf_no_spatial", "body_scene", "centerline", "body_corner", "no_geometry_encoding", "fixed_query"), default="body_scene")
     parser.add_argument("--alignment", help="Joint-alignment parameters; features must be generated with this same LoRA")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--seed", type=int, default=0)

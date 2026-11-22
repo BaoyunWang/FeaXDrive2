@@ -213,7 +213,7 @@ class FlowPlanner(nn.Module):
         pred = self.action_decoder(model_output)
         return pred.chunk(2, dim=-1)[0] if self.config.flow_cfg.mean_variance_net else pred
 
-    def get_action(self, vl_features: torch.Tensor, action_input: BatchFeature, init_actions: Optional[torch.Tensor]=None, deterministic: bool=False, *, return_trace: bool=False, prepared_condition=None, query_prefixes: Optional[torch.Tensor]=None, query_update: str='dynamic') -> BatchFeature:
+    def get_action(self, vl_features: torch.Tensor, action_input: BatchFeature, init_actions: Optional[torch.Tensor]=None, deterministic: bool=False, *, return_trace: bool=False, prepared_condition=None, query_prefixes: Optional[torch.Tensor]=None, query_update: Optional[str]=None) -> BatchFeature:
         """
         Generates action trajectories via the configured sampling method.
 
@@ -233,9 +233,10 @@ class FlowPlanner(nn.Module):
             query_prefixes: Training-only detached metric Query coordinates
                 [B,steps,horizon,3]. Requires Camera Query and return_trace;
                 substitutes no action states. None preserves inference exactly.
-            query_update: "dynamic" preserves the canonical sampler. Eval-only
-                "fixed_first_estimate" requires five-step Camera Flow, eval()
-                and disabled autograd, and excludes query_prefixes. Start with
+            query_update: None uses the planner's spatial_query_update policy
+                ("dynamic" for the standard planner). "fixed_first_estimate"
+                supports training and inference with five-step Camera Flow
+                and excludes query_prefixes. Start with
                 literal metric zeros; after velocity evaluation 0, clamp its
                 pre-Euler clean estimate, denormalize and detach it as r1. Reuse
                 r1 for evaluations 1..4, updating latent/time/context normally.
@@ -244,14 +245,14 @@ class FlowPlanner(nn.Module):
         Returns:
             BatchFeature: A batch containing the final predicted trajectory.
         """
+        if query_update is None:
+            query_update = getattr(self, 'spatial_query_update', 'dynamic')
         if query_update not in ('dynamic', 'fixed_first_estimate'):
             raise ValueError(f'Unsupported query_update: {query_update!r}')
         fixed_first_estimate = query_update == 'fixed_first_estimate'
         if fixed_first_estimate:
             if self.config.sampling_method != 'flow' or self.config.num_inference_steps != 5 or (not hasattr(self.model, 'camera_grounded_query')):
                 raise ValueError('fixed_first_estimate requires five-step Camera Flow')
-            if self.training or torch.is_grad_enabled():
-                raise ValueError('fixed_first_estimate is eval-only; call eval() with autograd disabled')
             if query_prefixes is not None:
                 raise ValueError('fixed_first_estimate cannot be combined with training query_prefixes')
         if return_trace and self.config.sampling_method != 'flow':

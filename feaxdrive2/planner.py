@@ -16,7 +16,7 @@ from .training.precision import strict_fp32
 CONDITION_KEYS = ("multimodal_type_ids", "multimodal_position_ids", "multimodal_valid_mask", "coc_valid")
 LAYOUTS = {"base": None, "rcf_no_spatial": None, "body_scene": "body_side_context",
            "centerline": "centerline", "body_corner": "footprint",
-           "no_geometry_encoding": "body_side_no_geometry"}
+           "no_geometry_encoding": "body_side_no_geometry", "fixed_query": "body_side_context"}
 
 
 def token_noise(tokens: Sequence[str], seed=0, *, device="cpu", dtype=torch.float32):
@@ -49,8 +49,13 @@ class Planner(nn.Module):
         if layout is not None:
             self.action_head.model.camera_grounded_query = CameraGroundedQuery(
                 pacifica_geometry=PACIFICA, anchor_layout=layout)
+        self.action_head.spatial_query_update = self.spatial_query_update
         if variant == "rcf_no_spatial":
             self.action_head.rcf_no_body = self.action_head.model.rcf_no_body = True
+
+    @property
+    def spatial_query_update(self):
+        return "fixed_first_estimate" if self.variant == "fixed_query" else "dynamic"
 
     @property
     def has_spatial_retrieval(self):
