@@ -14,6 +14,22 @@ estimate determines the next body queries and side-probe locations.
 - **2026-11-22**: The formal Fixed-Query Retrieval ablation is supported in RC-F training, checkpoint conversion, and inference.
 - **2026-11-20**: Paper-model source code, training objectives, feature readout, checkpoint conversion, and portable examples are released.
 
+## Main Results
+
+Paper results for **FeaXDrive2** on **12,146 NAVTEST scenarios**, using
+camera-only perception and single-candidate inference. NAVSIM v2 uses the
+official single-stage non-reactive scorer on the same scenarios.
+Scores are reported on a 0–100 scale.
+
+| Evaluation | NC ↑ | TTC ↑ | DAC ↑ | EP ↑ | PDMS ↑ | EPDMS ↑ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| NAVSIM v1 | 99.1 | 96.3 | 96.1 | 82.4 | **88.8** | — |
+| NAVSIM v2 | 99.1 | 98.6 | 96.1 | 86.9 | — | **88.3** |
+
+NC: no-at-fault collision; TTC: time-to-collision safety; DAC: drivable-area
+compliance; EP: ego progress. On NAVSIM v1, at-fault collision scenarios decrease
+from **181 to 115** relative to the Base Planner (**36.5% fewer**).
+
 ## Installation
 
 Use Python 3.12 for the complete VLM path. Install PyTorch 2.8.0 / torchvision
