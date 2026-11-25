@@ -6,15 +6,14 @@
 </p>
 
 <p align="center">
-  <sup>1</sup> College of Automotive and Energy Engineering, Tongji University, Shanghai 201804, China<br>
-  <sup>2</sup> Department of Civil Engineering, The University of Hong Kong, Pokfulam Road, Hong Kong, China<br>
-  <sup>3</sup> James Watt School of Engineering, University of Glasgow, Glasgow G12 8QQ, United Kingdom
+  <sup>1</sup> College of Automotive and Energy Engineering, Tongji University<br>
+  <sup>2</sup> Department of Civil Engineering, The University of Hong Kong<br>
+  <sup>3</sup> James Watt School of Engineering, University of Glasgow
 </p>
 
 <p align="center">
   <sup>*</sup> Corresponding authors:
-  Baoyun Wang (<a href="mailto:wangby@tongji.edu.cn">wangby@tongji.edu.cn</a>) and
-  Zhuoren Li (<a href="mailto:zhuoren@hku.hk">zhuoren@hku.hk</a>).
+  Baoyun Wang and Zhuoren Li.
 </p>
 
 FeaXDrive2 combines an Alpamayo-conditioned Action Flow-DiT with body-anchored
