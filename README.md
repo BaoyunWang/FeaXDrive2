@@ -1,12 +1,21 @@
 <h1 align="center">FeaXDrive2: Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving</h1>
 
-<div align="center">
+<p align="center">
+  Bo Leng<sup>1</sup>, Baoyun Wang<sup>1,*</sup>, Wenxin Wen<sup>1</sup>, Ming Liu<sup>1</sup>, Weiqi Zhang<sup>1</sup>,<br>
+  Ran Yu<sup>1</sup>, Chongfeng Wei<sup>3</sup>, Zhuoren Li<sup>2,*</sup>, Lu Xiong<sup>1</sup>
+</p>
 
-[![Code](https://img.shields.io/badge/Code-GitHub-blue.svg)](https://github.com/BaoyunWang/FeaXDrive2)
-[![Documentation](https://img.shields.io/badge/Docs-Data%20Contract-orange.svg)](docs/data.md)
-[![License](https://img.shields.io/badge/License-See%20LICENSE-lightgrey.svg)](LICENSE)
+<p align="center">
+  <sup>1</sup> College of Automotive and Energy Engineering, Tongji University, Shanghai 201804, China<br>
+  <sup>2</sup> Department of Civil Engineering, The University of Hong Kong, Pokfulam Road, Hong Kong, China<br>
+  <sup>3</sup> James Watt School of Engineering, University of Glasgow, Glasgow G12 8QQ, United Kingdom
+</p>
 
-</div>
+<p align="center">
+  <sup>*</sup> Corresponding authors:
+  Baoyun Wang (<a href="mailto:wangby@tongji.edu.cn">wangby@tongji.edu.cn</a>) and
+  Zhuoren Li (<a href="mailto:zhuoren@hku.hk">zhuoren@hku.hk</a>).
+</p>
 
 FeaXDrive2 combines an Alpamayo-conditioned Action Flow-DiT with body-anchored
 spatial visual retrieval, rollout-consistent safety fine-tuning (RC-F), and
