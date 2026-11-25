@@ -37,8 +37,48 @@ Base Planner learning
 
 This repository contains the paper model, its training objectives, feature
 readout, checkpoint conversion, and portable training/inference examples.
-Model weights, licensed datasets, maps, metric caches, and experiment outputs
+Model weights, licensed datasets, maps, metric caches, and raw experiment outputs
 are not included. There are no automatic asset downloads or cluster submissions.
+
+## Qualitative Results
+
+Body contact avoidance on NAVTEST: **orange** denotes the **Base Planner**, and
+**blue** denotes the **Body–Scene Grounded Planner** (spatial retrieval + RC-F,
+before VLM–Action Alignment). Each case pairs front-view trajectory and swept-body
+overlays with a BEV comparison at the Base Planner's first contact time.
+Annotations show minimum signed body clearance and raw progress; percentages
+indicate progress retention. Case (e) uses the passenger's annotated footprint.
+Click an image to view it at full resolution.
+
+<p align="center">
+  <a href="assets/images/case-a.png"><img src="assets/images/case-a.png" alt="Case (a): right turn near another vehicle, with front-view trajectories and a BEV body-clearance comparison." width="100%"></a><br>
+  <b>(a) Right turn near another vehicle</b>
+</p>
+
+<p align="center">
+  <a href="assets/images/case-b.png"><img src="assets/images/case-b.png" alt="Case (b): intersection turn, with front-view trajectories and a BEV body-clearance comparison." width="100%"></a><br>
+  <b>(b) Intersection turn</b>
+</p>
+
+<p align="center">
+  <a href="assets/images/case-c.png"><img src="assets/images/case-c.png" alt="Case (c): right turn near another vehicle, with front-view trajectories and a BEV body-clearance comparison." width="100%"></a><br>
+  <b>(c) Right turn near another vehicle</b>
+</p>
+
+<p align="center">
+  <a href="assets/images/case-d.png"><img src="assets/images/case-d.png" alt="Case (d): roadworks junction, with front-view trajectories and a BEV body-clearance comparison." width="100%"></a><br>
+  <b>(d) Roadworks junction</b>
+</p>
+
+<p align="center">
+  <a href="assets/images/case-e.png"><img src="assets/images/case-e.png" alt="Case (e): passenger opening a door to exit, with front-view trajectories and a BEV comparison using the passenger's annotated footprint." width="100%"></a><br>
+  <b>(e) Passenger opening a door to exit</b>
+</p>
+
+<p align="center">
+  <a href="assets/images/case-f.png"><img src="assets/images/case-f.png" alt="Case (f): turning near a long vehicle, with front-view trajectories and a BEV body-clearance comparison." width="100%"></a><br>
+  <b>(f) Turning near a long vehicle</b>
+</p>
 
 ## Installation
 
