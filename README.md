@@ -1,10 +1,5 @@
 <h1 align="center">FeaXDrive2: Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving</h1>
 
-<p align="center">
-  Bo Leng, Baoyun Wang, Wenxin Wen, Ming Liu, Weiqi Zhang,<br>
-  Ran Yu, Chongfeng Wei, Zhuoren Li, Lu Xiong
-</p>
-
 FeaXDrive2 combines an Alpamayo-conditioned Action Flow-DiT with body-anchored
 spatial visual retrieval, rollout-consistent safety fine-tuning (RC-F), and
 VLM–Action Alignment. During **five Flow updates**, each preceding clean-trajectory
