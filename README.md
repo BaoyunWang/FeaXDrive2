@@ -122,13 +122,6 @@ single-stage v2 scorer on NAVTEST.
 - [Training, fixed-query ablation, and alignment](docs/training.md)
 - [Checkpoint conversion](examples/convert_checkpoint.py)
 
-## License and Acknowledgements
-
-See [LICENSE](LICENSE) and [NOTICE](NOTICE). Alpamayo and dataset assets remain
-subject to their respective licenses. FeaXDrive2 builds on
-[FeaXDrive](https://github.com/BaoyunWang/FeaXDrive), NAVSIM,
-ReCogDrive/LightningDiT, and NVIDIA Alpamayo.
-
 ## Qualitative Results
 
 Body contact avoidance on NAVTEST: **orange** denotes the **Base Planner**, and
@@ -171,3 +164,10 @@ Click an image to view it at full resolution.
     </td>
   </tr>
 </table>
+
+## License and Acknowledgements
+
+See [LICENSE](LICENSE) and [NOTICE](NOTICE). Alpamayo and dataset assets remain
+subject to their respective licenses. FeaXDrive2 builds on
+[FeaXDrive](https://github.com/BaoyunWang/FeaXDrive), NAVSIM,
+ReCogDrive/LightningDiT, and NVIDIA Alpamayo.
