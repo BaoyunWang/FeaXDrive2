@@ -23,8 +23,8 @@ Scores are reported on a 0–100 scale.
 
 | Evaluation | NC ↑ | TTC ↑ | DAC ↑ | EP ↑ | PDMS ↑ | EPDMS ↑ |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| NAVSIM v1 | 99.1 | 96.3 | 96.1 | 82.4 | **88.8** | — |
-| NAVSIM v2 | 99.1 | 98.6 | 96.1 | 86.9 | — | **88.3** |
+| NAVSIM v1 | **99.1** | **96.3** | 96.1 | 82.4 | **88.8** | — |
+| NAVSIM v2 | **99.1** | **98.6** | 96.1 | 86.9 | — | **88.3** |
 
 NC: no-at-fault collision; TTC: time-to-collision safety; DAC: drivable-area
 compliance; EP: ego progress. On NAVSIM v1, at-fault collision scenarios decrease
