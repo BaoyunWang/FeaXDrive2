@@ -1,19 +1,8 @@
 <h1 align="center">FeaXDrive2: Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving</h1>
 
 <p align="center">
-  Bo Leng<sup>1</sup>, Baoyun Wang<sup>1,*</sup>, Wenxin Wen<sup>1</sup>, Ming Liu<sup>1</sup>, Weiqi Zhang<sup>1</sup>,<br>
-  Ran Yu<sup>1</sup>, Chongfeng Wei<sup>3</sup>, Zhuoren Li<sup>2,*</sup>, Lu Xiong<sup>1</sup>
-</p>
-
-<p align="center">
-  <sup>1</sup> College of Automotive and Energy Engineering, Tongji University<br>
-  <sup>2</sup> Department of Civil Engineering, The University of Hong Kong<br>
-  <sup>3</sup> James Watt School of Engineering, University of Glasgow
-</p>
-
-<p align="center">
-  <sup>*</sup> Corresponding authors:
-  Baoyun Wang and Zhuoren Li.
+  Bo Leng, Baoyun Wang, Wenxin Wen, Ming Liu, Weiqi Zhang,<br>
+  Ran Yu, Chongfeng Wei, Zhuoren Li, Lu Xiong
 </p>
 
 FeaXDrive2 combines an Alpamayo-conditioned Action Flow-DiT with body-anchored
