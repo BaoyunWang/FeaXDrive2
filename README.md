@@ -186,6 +186,23 @@ Click an image to view it at full resolution.
   </tr>
 </table>
 
+## Citation
+
+If you use FeaXDrive2 in your research, please cite:
+
+```bibtex
+@misc{leng2026feaxdrive2,
+  title         = {{FeaXDrive2}: Body-Scene Spatial Grounding for Feasibility-Aware Generative Driving},
+  author        = {Leng, Bo and Wang, Baoyun and Wen, Wenxin and Liu, Ming and
+                   Zhang, Weiqi and Yu, Ran and Wei, Chongfeng and Li, Zhuoren and Xiong, Lu},
+  year          = {2026},
+  eprint        = {2611.34658},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2611.34658}
+}
+```
+
 ## License and Acknowledgements
 
 See [LICENSE](LICENSE) and [NOTICE](NOTICE). Alpamayo and dataset assets remain
