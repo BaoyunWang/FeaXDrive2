@@ -1,5 +1,9 @@
 <h1 align="center">FeaXDrive2: Body–Scene Spatial Grounding for Feasibility-Aware Generative Driving</h1>
 
+<p align="center">
+  <a href="https://arxiv.org/abs/2611.34658"><img src="https://img.shields.io/badge/arXiv-2611.34658-b31b1b.svg" alt="arXiv:2611.34658"></a>
+</p>
+
 FeaXDrive2 combines an Alpamayo-conditioned Action Flow-DiT with body-anchored
 spatial visual retrieval, rollout-consistent safety fine-tuning (RC-F), and
 VLM–Action Alignment. During **five Flow updates**, each preceding clean-trajectory
@@ -11,6 +15,7 @@ estimate determines the next body queries and side-probe locations.
 
 ## News
 
+- **2026-11-26**: The [FeaXDrive2 preprint](https://arxiv.org/abs/2611.34658v1) is now available on arXiv (v1).
 - **2026-11-22**: The formal Fixed-Query Retrieval ablation is supported in RC-F training, checkpoint conversion, and inference.
 - **2026-11-20**: Paper-model source code, training objectives, feature readout, checkpoint conversion, and portable examples are released.
 
