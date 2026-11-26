@@ -2,6 +2,8 @@
 
 <p align="center">
   <a href="https://arxiv.org/abs/2611.34658"><img src="https://img.shields.io/badge/arXiv-2611.34658-b31b1b.svg" alt="arXiv:2611.34658"></a>
+  <a href="https://arxiv.org/pdf/2611.34658"><img src="https://img.shields.io/badge/Paper-PDF-blue.svg" alt="Paper PDF"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-See%20LICENSE-lightgrey.svg" alt="License: See LICENSE"></a>
 </p>
 
 FeaXDrive2 combines an Alpamayo-conditioned Action Flow-DiT with body-anchored
